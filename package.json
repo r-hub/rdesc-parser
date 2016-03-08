@@ -1,0 +1,24 @@
+{
+  "name": "rdesc-parser",
+  "version": "1.0.0",
+  "description": "Parser for R package DESCRIPTION files.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/r-hub/rdesc-parser.git"
+  },
+  "keywords": [
+    "R",
+    "DESCRIPTION",
+    "parser"
+  ],
+  "author": "Gabor Csardi",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/r-hub/rdesc-parser/issues"
+  },
+  "homepage": "https://github.com/r-hub/rdesc-parser#readme"
+}
