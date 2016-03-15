@@ -2,7 +2,7 @@
 var fs = require('fs');
 var byline = require('byline');
 
-function parse(file) {
+function parse(file, callback) {
     var stream = byline(fs.createReadStream(file, { encoding: 'utf8' }));
     var desc = { };
     var current = '';
@@ -11,16 +11,30 @@ function parse(file) {
 	var line;
 	while (null !== (line = stream.read())) {
 	    if (line.match(/^[^\s]/) && current !== '') {
-		var rec = split_record(current);
-		desc[ rec.key ] = rec.value;
+		try {
+		    var rec = split_record(current);
+		    desc[ rec.key ] = rec.value;
+		}
+		catch(e) {
+		    callback(e); return;
+		}
 		current = line;
 	    } else {
 		current = current + '\n' + line;
 	    }
 	}
+	try {
+	    var rec = split_record(current);
+	    desc[ rec.key ] = rec.value;
+	}
+	catch(e) {
+	    callback(e); return;
+	}
     });
 
-    return desc;
+    stream.on('end', function() {
+	callback(null, desc);
+    });
 }
 
 function split_record(str) {
