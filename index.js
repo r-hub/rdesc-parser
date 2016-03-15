@@ -1,10 +1,8 @@
 
-var fs = require('fs');
 var byline = require('byline');
 
-function parse(file, callback) {
-    var stream = byline(fs.createReadStream(file),
-			{ encoding: 'utf8', keepEmptyLines: true });
+function parse(stream, callback) {
+    var stream = byline(stream, { keepEmptyLines: true });
     var desc = { };
     var current = '';
     var first = true;
