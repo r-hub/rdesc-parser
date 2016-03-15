@@ -7,6 +7,8 @@ function parse(stream, callback) {
     var current = '';
     var first = true;
 
+    stream.setEncoding('utf8');
+
     function reader(line) {
 
 	// First line is special
