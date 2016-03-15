@@ -1,0 +1,4 @@
+Package: devtools
+Title: Tools to Make Developing R Packages Easier
+
+Version: 1.10.0.9000
