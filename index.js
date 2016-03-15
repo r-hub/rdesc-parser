@@ -3,43 +3,48 @@ var fs = require('fs');
 var byline = require('byline');
 
 function parse(file, callback) {
-    var stream = byline(fs.createReadStream(file, { encoding: 'utf8' }));
+    var stream = byline(fs.createReadStream(file),
+			{ encoding: 'utf8', keepEmptyLines: true });
     var desc = { };
     var current = '';
+    var first = true;
 
-    stream.on('readable', function() {
-	var line;
-	while (null !== (line = stream.read())) {
-	    if (line.match(/^[^\s]/) && current !== '') {
-		try {
-		    var rec = split_record(current);
-		    desc[ rec.key ] = rec.value;
-		}
-		catch(e) {
-		    callback(e); return;
-		}
-		current = line;
-	    } else {
-		current = current + '\n' + line;
-	    }
-	}
-	try {
+    function reader(line) {
+
+	// First line is special
+	if (first) {
+	    current = line;
+	    first = false;
+
+	// Starts with space, same record, append
+	} else if (line.match(/^\s/)) {
+	    current = current + '\n' + line.trim();
+
+	// New record, need to emit the previous one
+	} else {
 	    var rec = split_record(current);
+	    if (rec.key === '') {
+		// No way to close a stream, we just remove the listeners
+		// if an error happens
+		stream.removeListener('data', reader);
+		stream.removeListener('end', finisher);
+		return callback('Invalid record: ' + rec.value);
+	    }
 	    desc[ rec.key ] = rec.value;
+	    current = line;
 	}
-	catch(e) {
-	    callback(e); return;
-	}
-    });
+    }
 
-    stream.on('end', function() {
+    function finisher() {
 	callback(null, desc);
-    });
+    }
+
+    stream.on('data', reader);
+    stream.on('end', finisher);
 }
 
 function split_record(str) {
     var colon = str.indexOf(":");
-    if (colon < 0) { throw ("Invalid record: " + str); return; }
     return { 'key': str.substr(0, colon).trim(),
 	     'value': str.substr(colon + 1).trim() };
 }
