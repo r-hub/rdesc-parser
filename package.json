@@ -20,5 +20,8 @@
   "bugs": {
     "url": "https://github.com/r-hub/rdesc-parser/issues"
   },
-  "homepage": "https://github.com/r-hub/rdesc-parser#readme"
+  "homepage": "https://github.com/r-hub/rdesc-parser#readme",
+  "dependencies": {
+    "byline": "^4.2.1"
+  }
 }
