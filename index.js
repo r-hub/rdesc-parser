@@ -1,4 +1,4 @@
-
+var deps = require('rhub-node').dependency_types;
 var byline = require('byline');
 
 function parse(stream, callback) {
@@ -30,6 +30,12 @@ function parse(stream, callback) {
 		stream.removeListener('end', finisher);
 		return callback('Invalid record: ' + rec.value);
 	    }
+	    if (deps.indexOf(rec.key) > -1) {
+	      rec.value = parse_dep(rec.value);
+	    }
+	    if (rec.key == 'Remotes') {
+	      rec.value = parse_remotes(rec.value);
+	    }
 	    desc[ rec.key ] = rec.value;
 	    current = line;
 	}
@@ -41,6 +47,14 @@ function parse(stream, callback) {
 
     stream.on('data', reader);
     stream.on('end', finisher);
+}
+
+function parse_dep(str) {
+  return str.split(/,[\s]*/);
+}
+
+function parse_remotes(str) {
+  return str.split(/,[\s]*/);
 }
 
 function split_record(str) {

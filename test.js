@@ -19,7 +19,8 @@ test.cb('D2', function(t) {
 	 function(err, d) {
 	     t.is(err, null);
 	     t.is(d.Package, 'roxygen2');
-	     t.is(d.Depends, 'R (>= 3.0.2)');
+	     t.is(d.Depends.length, 1);
+	     t.is(d.Depends[0], 'R (>= 3.0.2)');
 	     t.end();
 	 });
 });

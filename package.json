@@ -22,7 +22,8 @@
   },
   "homepage": "https://github.com/r-hub/rdesc-parser#readme",
   "dependencies": {
-    "byline": "^4.2.1"
+    "byline": "^4.2.1",
+    "rhub-node": "git+https://github.com/r-hub/rhub-node.git"
   },
   "devDependencies": {
     "ava": "^0.13.0"
