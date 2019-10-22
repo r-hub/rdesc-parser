@@ -1,5 +1,5 @@
 
-var test = require('ava').test;
+var test = require('ava');
 var fs = require('fs');
 var desc = require('.');
 

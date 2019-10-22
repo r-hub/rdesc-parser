@@ -26,6 +26,6 @@
     "rhub-node": "git+https://github.com/r-hub/rhub-node.git"
   },
   "devDependencies": {
-    "ava": "^0.13.0"
+    "ava": "^2.4.0"
   }
 }
