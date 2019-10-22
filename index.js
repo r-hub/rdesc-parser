@@ -1,5 +1,6 @@
 var deps = require('rhub-node').dependency_types;
 var byline = require('byline');
+var fs = require('fs');
 
 function parse(stream, callback) {
     var stream = byline(stream, { keepEmptyLines: true });
@@ -62,5 +63,11 @@ function split_record(str) {
     return { 'key': str.substr(0, colon).trim(),
 	     'value': str.substr(colon + 1).trim() };
 }
+
+function parse_file(path, callback) {
+    parse(fs.createReadStream(path, { 'encoding': 'utf8' }), callback)
+}
+
+parse.parse_file = parse_file;
 
 module.exports = parse;

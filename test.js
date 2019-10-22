@@ -34,3 +34,13 @@ test.cb('D3', function(t) {
 	 });
 
 })
+
+test.cb('parse_file', function(t) {
+    desc.parse_file('./test/D1', function(err, d) {
+        t.is(err, null);
+	t.is(d.Package, 'parr');
+	t.is(d.Maintainer, 'Gabor Csardi <csardi.gabor@gmail.com>');
+	t.is(d.RoxygenNote, '5.0.1');
+	t.end();
+    });
+});
