@@ -1,6 +1,6 @@
 {
   "name": "rdesc-parser",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Parser for R package DESCRIPTION files.",
   "main": "index.js",
   "scripts": {
@@ -23,7 +23,7 @@
   "homepage": "https://github.com/r-hub/rdesc-parser#readme",
   "dependencies": {
     "byline": "^4.2.1",
-    "rhub-node": "git+https://github.com/r-hub/rhub-node.git"
+    "rhub-node": "^1.1.0"
   },
   "devDependencies": {
     "ava": "^2.4.0"
