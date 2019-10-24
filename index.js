@@ -139,6 +139,8 @@ function parse_stream(descstream, callback) {
                 parse_tar_stream(x, callback);
             } else if (mime = "application/zip") {
                 parse_zip_stream(x, callback);
+            } else {
+                parse_desc_stream(x, callback);
             }
         } else {
             parse_desc_stream(x, callback)
