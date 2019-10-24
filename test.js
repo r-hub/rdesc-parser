@@ -28,19 +28,115 @@ test.cb('D2', function(t) {
 test.cb('D3', function(t) {
     desc(fs.createReadStream('./test/D3', { 'encoding': 'utf8' }),
 	 function(err, d) {
-	     console.log(err);
 	     t.is(err, "Invalid record: ");
 	     t.end();
 	 });
 
 })
 
-test.cb('parse_file', function(t) {
+test.cb('parse_desc_file', function(t) {
+    desc.parse_desc_file('./test/D1', function(err, d) {
+        t.is(err, null);
+	t.is(d.Package, 'parr');
+	t.is(d.Maintainer, 'Gabor Csardi <csardi.gabor@gmail.com>');
+	t.is(d.RoxygenNote, '5.0.1');
+	t.end();
+    });
+});
+
+test.cb('parse_tar_stream', function(t) {
+    desc.parse_tar_stream(
+        fs.createReadStream('./test/foobar_1.0.0.tar'),
+        function(err, d) {
+            t.is(err, null);
+            t.is(d.Package, 'foobar');
+            t.is(d.RoxygenNote, '6.0.1');
+            t.end();
+    });
+});
+
+test.cb('parse_tar_stream, gzipped', function(t) {
+    desc.parse_tar_stream(
+        fs.createReadStream('./test/foobar_1.0.0.tar.gz'),
+        function(err, d) {
+            t.is(err, null);
+            t.is(d.Package, 'foobar');
+            t.is(d.RoxygenNote, '6.0.1');
+            t.end();
+    });
+});
+
+test.cb('parse_tar_file', function(t) {
+    desc.parse_tar_file('./test/foobar_1.0.0.tar', function(err, d) {
+        t.is(err, null);
+        t.is(d.Package, 'foobar');
+        t.is(d.RoxygenNote, '6.0.1');
+        t.end();
+    });
+});
+
+test.cb('parse_tar_file, gzipped', function(t) {
+    desc.parse_tar_file('./test/foobar_1.0.0.tar.gz', function(err, d) {
+        t.is(err, null);
+        t.is(d.Package, 'foobar');
+        t.is(d.RoxygenNote, '6.0.1');
+        t.end();
+    });
+});
+
+test.cb('parse_zip_stream', function(t) {
+    desc.parse_zip_stream(
+        fs.createReadStream('./test/foobar_1.0.0.zip'),
+        function(err, d) {
+            t.is(err, null);
+            t.is(d.Package, 'foobar');
+            t.is(d.RoxygenNote, '6.0.1');
+            t.end();
+    });
+});
+
+test.cb('parse_zip_file', function(t) {
+    desc.parse_zip_file('./test/foobar_1.0.0.zip', function(err, d) {
+        t.is(err, null);
+        t.is(d.Package, 'foobar');
+        t.is(d.RoxygenNote, '6.0.1');
+        t.end();
+    });
+});
+
+test.cb('parse_file, plain file', function(t) {
     desc.parse_file('./test/D1', function(err, d) {
         t.is(err, null);
 	t.is(d.Package, 'parr');
 	t.is(d.Maintainer, 'Gabor Csardi <csardi.gabor@gmail.com>');
 	t.is(d.RoxygenNote, '5.0.1');
+	t.end();
+    });
+});
+
+test.cb('parse_file, tar file', function(t) {
+    desc.parse_file('./test/foobar_1.0.0.tar', function(err, d) {
+        t.is(err, null);
+	t.is(d.Package, 'foobar');
+	t.is(d.RoxygenNote, '6.0.1');
+	t.end();
+    });
+});
+
+test.cb('parse_file, tar.gz file', function(t) {
+    desc.parse_file('./test/foobar_1.0.0.tar.gz', function(err, d) {
+        t.is(err, null);
+	t.is(d.Package, 'foobar');
+	t.is(d.RoxygenNote, '6.0.1');
+	t.end();
+    });
+});
+
+test.cb('parse_file, zip file', function(t) {
+    desc.parse_file('./test/foobar_1.0.0.zip', function(err, d) {
+        t.is(err, null);
+	t.is(d.Package, 'foobar');
+	t.is(d.RoxygenNote, '6.0.1');
 	t.end();
     });
 });
