@@ -42,6 +42,9 @@ function parse_desc_stream(descstream, callback) {
 	    if (rec.key == 'Remotes') {
 	      rec.value = parse_remotes(rec.value);
 	    }
+        if (rec.key == 'Built') {
+          rec.value = parse_built(rec.value);
+        }
 	    desc[ rec.key ] = rec.value;
 	    current = line;
 	}
@@ -61,6 +64,16 @@ function parse_dep(str) {
 
 function parse_remotes(str) {
   return str.split(/,[\s]*/);
+}
+
+function parse_built(str) {
+  var built = str.split(/;[\s]*/);
+  return {
+    R: built[0].replace(/^R /, ''),
+    Platform: built[1],
+    Date: built[2],
+    OStype: built[3]
+  };
 }
 
 function split_record(str) {
