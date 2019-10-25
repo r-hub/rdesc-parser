@@ -137,6 +137,10 @@ test.cb('parse_file, zip file', function(t) {
         t.is(err, null);
 	t.is(d.Package, 'foobar');
 	t.is(d.RoxygenNote, '6.0.1');
+    t.is(d.Built.R, '3.4.3');
+    t.is(d.Built.Platform, '');
+    t.is(d.Built.Date, '2017-12-25 19:19:13 UTC');
+    t.is(d.Built.OStype, 'unix');
 	t.end();
     });
 });
