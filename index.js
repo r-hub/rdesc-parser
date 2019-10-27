@@ -36,6 +36,9 @@ function parse_desc_stream(descstream, callback) {
 		descstream.removeListener('end', finisher);
 		return callback('Invalid record: ' + rec.value);
 	    }
+        if (rec.key != 'Description'){
+          rec.value = rec.value.replace(/\s/g, ' ');
+        } 
 	    if (deps.indexOf(rec.key) > -1) {
 	      rec.value = parse_dep(rec.value);
 	    }
