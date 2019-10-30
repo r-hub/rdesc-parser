@@ -1,4 +1,3 @@
-var deps = require('rhub-node').dependency_types;
 var byline = require('byline');
 var fs = require('fs');
 var filetype = require('file-type');
@@ -8,6 +7,7 @@ var unzip = require('unzipper');
 var stream = require('stream');
 
 function parse_desc_stream(descstream, callback) {
+    var deps = ['Depends', 'LinkingTo', 'Imports', 'Suggests', 'Enhances'];
     var descstream = byline(descstream, { keepEmptyLines: true });
     var desc = { };
     var current = '';
