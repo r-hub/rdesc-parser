@@ -1,4 +1,4 @@
-var deps = require('rhub-node').dependency_types;
+var deps = require('r-constants').dependency_types;
 var byline = require('byline');
 var fs = require('fs');
 var filetype = require('file-type');

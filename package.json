@@ -1,6 +1,6 @@
 {
   "name": "rdesc-parser",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "description": "Parser for R package DESCRIPTION files.",
   "main": "index.js",
   "scripts": {
@@ -25,7 +25,7 @@
     "byline": "^4.2.1",
     "file-type": "^12.3.1",
     "gunzip-maybe": "^1.4.1",
-    "rhub-node": "^1.1.0",
+    "r-constants": "^1.0.0",
     "tar-stream": "^2.1.0",
     "unzipper": "^0.10.5"
   },
