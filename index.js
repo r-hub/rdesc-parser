@@ -7,6 +7,10 @@ var gunzip = require('gunzip-maybe');
 var unzip = require('unzipper');
 var stream = require('stream');
 
+function normalize_ws(x){
+    return x.trim().replace(/\s/g, ' ');
+}
+
 function parse_desc_stream(descstream, callback) {
     var descstream = byline(descstream, { keepEmptyLines: true });
     var desc = { };
@@ -36,9 +40,6 @@ function parse_desc_stream(descstream, callback) {
 		descstream.removeListener('end', finisher);
 		return callback('Invalid record: ' + rec.value);
 	    }
-        if (rec.key != 'Description'){
-          rec.value = rec.value.replace(/\s/g, ' ');
-        } 
 	    if (deps.indexOf(rec.key) > -1) {
 	      rec.value = parse_dep(rec.value);
 	    }
@@ -62,7 +63,7 @@ function parse_desc_stream(descstream, callback) {
 }
 
 function parse_dep(str) {
-  return str.split(/,[\s]*/);
+  return str.split(/,[\s]*/).map(normalize_ws);
 }
 
 function parse_remotes(str) {
