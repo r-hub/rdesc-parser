@@ -16,23 +16,22 @@ rdesc(stream, function(err, d) {
 })
 ```
 
-```json
-{ Package: 'sysreqs',
+```js
+{
+  Package: 'sysreqs',
   Title: 'Install SystemRequirements of Packages',
   Version: '1.0.0.9000',
-  Author: 'Gábor Csárdi',
-  Maintainer: 'Gábor Csárdi <csardi.gabor@gmail.com>',
-  Description:
-   'Automatically download and install system requirements of R packages.',
+  Author: 'Gabor Csardi',
+  Maintainer: 'Gabor Csardi <csardi.gabor@gmail.com>',
+  Description: 'Automatically download and install system requirements of R packages.',
   License: 'MIT + file LICENSE',
   LazyData: 'true',
   URL: 'https://github.com/r-hub/sysreqs',
   BugReports: 'https://github.com/r-hub/sysreqs/issues',
-  RoxygenNote: '6.1.1',
-  Suggests: [ 'testthat' ],
-  Imports: [ 'debugme', 'desc', 'jsonlite', 'processx', 'utils' ],
-  Encoding: 'UTF-8',
-  Roxygen: 'list(markdown = TRUE)' }
+  RoxygenNote: '5.0.1.9000',
+  Suggests: [ { package: 'testthat' } ],
+  Imports: [ { package: 'debugme' }, { package: 'desc' }, { package: 'utils' } ]
+}
 ```
 
 ### Parse `DESCRIPTION` file

@@ -1,6 +1,6 @@
 {
   "name": "rdesc-parser",
-  "version": "2.0.4",
+  "version": "3.0.0",
   "description": "Parser for R package DESCRIPTION files.",
   "main": "index.js",
   "scripts": {
@@ -16,6 +16,9 @@
     "parser"
   ],
   "author": "Gabor Csardi",
+  "contributors": [
+    "Jeroen Ooms"
+  ],
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/r-hub/rdesc-parser/issues"

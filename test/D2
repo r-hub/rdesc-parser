@@ -12,16 +12,18 @@ Authors@R: c(
     person("RStudio", role = "cph")
     )
 Depends:
-    R (>= 3.0.2)
+    R (>= 3.0.2),
 Imports:
-    stringr (>= 0.5) ,
-    stringi,
+    stringr 
+      (>=                     
+      0.5)
+    , stringi,
     brew,
     digest,
     methods ,
     Rcpp    (>= 0.11.0),
     commonmark,
-    xml2
+    xml2,
 Suggests:
     testthat (>= 0.8.0),
     knitr,

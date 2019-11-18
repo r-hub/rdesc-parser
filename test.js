@@ -20,8 +20,13 @@ test.cb('D2', function(t) {
 	     t.is(err, null);
 	     t.is(d.Package, 'roxygen2');
 	     t.is(d.Depends.length, 1);
-	     t.is(d.Depends[0], 'R (>= 3.0.2)');
-	     t.end();
+         t.is(d.Imports.length, 8);
+	     t.deepEqual(d.Depends[0], {package: 'R', version: '>= 3.0.2'});
+         t.deepEqual(d.Imports[0], {package: 'stringr', version: '>= 0.5'});
+         t.deepEqual(d.Imports[1], {package: 'stringi'});
+         t.deepEqual(d.Imports[5], {package: 'Rcpp', version: '>= 0.11.0'});
+         t.deepEqual(d.Suggests[0], {package: 'testthat', version: '>= 0.8.0'});
+         t.end();
 	 });
 });
 
