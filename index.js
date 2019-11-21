@@ -63,7 +63,17 @@ function parse_desc_stream(descstream, callback) {
 }
 
 function parse_dep(str) {
-  return str.split(/,[\s]*/).map(normalize_ws);
+  return str.split(/,[\s]*/s).filter(function(str){
+    return str.trim(); //filter out empty strings
+  }).map(function(str){
+    return str.match(/\(.+\)/s) ?
+        {
+            package: normalize_ws(str.replace(/\(.+\)/s, '')),
+            version: normalize_ws(str.replace(/.*\((.+)\)/s, '$1'))
+        } : {
+            package: normalize_ws(str)
+        };
+    });
 }
 
 function parse_remotes(str) {
