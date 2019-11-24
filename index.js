@@ -62,18 +62,26 @@ function parse_desc_stream(descstream, callback) {
     descstream.on('end', finisher);
 }
 
+function Dependency(package, version) {
+  this.package = package;
+  if(version)
+    this.version = version;
+}
+
+Dependency.prototype.toString = function() {
+  return this.package + (this.version ? " (" + this.version + ")" : "");
+}
+
 function parse_dep(str) {
   return str.split(/,[\s]*/s).filter(function(str){
     return str.trim(); //filter out empty strings
   }).map(function(str){
     return str.match(/\(.+\)/s) ?
-        {
-            package: normalize_ws(str.replace(/\(.+\)/s, '')),
-            version: normalize_ws(str.replace(/.*\((.+)\)/s, '$1'))
-        } : {
-            package: normalize_ws(str)
-        };
-    });
+      new Dependency(
+        normalize_ws(str.replace(/\(.+\)/s, '')),
+        normalize_ws(str.replace(/.*\((.+)\)/s, '$1'))
+      ) : new Dependency(normalize_ws(str));
+  });
 }
 
 function parse_remotes(str) {

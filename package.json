@@ -1,6 +1,6 @@
 {
   "name": "rdesc-parser",
-  "version": "3.0.0",
+  "version": "3.0.1",
   "description": "Parser for R package DESCRIPTION files.",
   "main": "index.js",
   "scripts": {
