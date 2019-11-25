@@ -149,3 +149,10 @@ test.cb('parse_file, zip file', function(t) {
 	t.end();
     });
 });
+
+test.cb('parse dependency string', function(t){
+    var deps = desc.parse_dep_string("foo (>= 1.2.3), bar");
+    t.deepEqual(deps[0], {package:'foo', version: '>= 1.2.3'});
+    t.deepEqual(deps[1], {package:'bar'});
+    t.end();
+});

@@ -41,7 +41,7 @@ function parse_desc_stream(descstream, callback) {
 		return callback('Invalid record: ' + rec.value);
 	    }
 	    if (deps.indexOf(rec.key) > -1) {
-	      rec.value = parse_dep(rec.value);
+	      rec.value = parse_dep_string(rec.value);
 	    }
 	    if (rec.key == 'Remotes') {
 	      rec.value = parse_remotes(rec.value);
@@ -62,7 +62,7 @@ function parse_desc_stream(descstream, callback) {
     descstream.on('end', finisher);
 }
 
-function parse_dep(str) {
+function parse_dep_string(str) {
   return str.split(/,[\s]*/s).filter(function(str){
     return str.trim(); //filter out empty strings
   }).map(function(str){
@@ -187,5 +187,6 @@ parse_desc_stream.parse_tar_file   = parse_tar_file;
 parse_desc_stream.parse_tar_stream = parse_tar_stream;
 parse_desc_stream.parse_zip_file   = parse_zip_file;
 parse_desc_stream.parse_zip_stream = parse_zip_stream;
+parse_desc_stream.parse_dep_string = parse_dep_string;
 
 module.exports = parse_desc_stream;
