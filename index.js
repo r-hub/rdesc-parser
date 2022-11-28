@@ -49,6 +49,9 @@ function parse_desc_stream(descstream, callback) {
         if (rec.key == 'Built') {
           rec.value = parse_built(rec.value);
         }
+        if (rec.key == 'Packaged') {
+          rec.value = parse_packaged(rec.value);
+        }
 	    desc[ rec.key ] = rec.value;
 	    current = line;
 	}
@@ -87,6 +90,14 @@ function parse_built(str) {
     Platform: built[1],
     Date: built[2],
     OStype: built[3]
+  };
+}
+
+function parse_packaged(str) {
+  var packaged = str.split(/;[\s]*/);
+  return {
+    Date: packaged[0],
+    User: packaged[1]
   };
 }
 
