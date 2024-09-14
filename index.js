@@ -117,17 +117,15 @@ function parse_tar_stream(descstream, callback) {
     var done = false;
 
     extract.on('entry', function(header, tarstream, tarcb) {
+        tarstream.on('end', tarcb);
         if (!done && header.name.match(/^[^\/]+\/DESCRIPTION$/)) {
             done = true;
             parse_desc_stream(tarstream, function(err, d) {
-                extract.destroy();
                 callback(err, d);
             });
         } else {
-            tarcb()
+            tarstream.resume();
         }
-
-        tarstream.resume();
     });
 
     extract.on('finish', function() {
@@ -136,7 +134,6 @@ function parse_tar_stream(descstream, callback) {
 
     extract.on('error', function(err) {
         callback(err);
-        extract.destroy();
     })
 
     descstream
