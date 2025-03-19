@@ -71,7 +71,6 @@ rdesc.parse_file('./test/foobar_1.0.0.zip', function(err, d) {
 
 ## License
 
-ISC @ R Consortium
+ISC @ Gábor Csárdi
 
-This repo is part of the R-hub project, supported by
-the R Consortium.
+This repo is part of the R-hub project
