@@ -33,6 +33,6 @@
     "unzipper": "^0.12.3"
   },
   "devDependencies": {
-    "ava": "^2.4.0"
+    "ava": "^6.2.0"
   }
 }
