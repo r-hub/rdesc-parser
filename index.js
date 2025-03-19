@@ -118,6 +118,10 @@ function parse_tar_stream(descstream, callback) {
 
     extract.on('entry', function(header, tarstream, tarcb) {
         tarstream.on('end', tarcb);
+        tarstream.on('error', function(err){
+            done = true;
+            callback(err);
+        });
         if (!done && header.name.match(/^[^\/]+\/DESCRIPTION$/)) {
             done = true;
             parse_desc_stream(tarstream, function(err, d) {
