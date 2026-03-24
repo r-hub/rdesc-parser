@@ -46,7 +46,7 @@ rdesc.parse_desc_file('./DESCRIPTION', function(err, d) {
 
 ### Parse `DESCRIPTION` from a package stream
 
-It supports `.tar.gz`, `.tar` and `.zip` files.
+It supports `tar.zstd`, `.tar.gz`, `.tar` and `.zip` files.
 
 ```js
 var rdesc = require('rdesc-parser');
@@ -59,7 +59,7 @@ rdesc.parse_stream(stream, function(err, d) {
 
 ### Parse `DESCRIPTION` from a package file
 
-It supports `.tar.gz`, `.tar` and `.zip` files.
+It supports `tar.zstd`, `.tar.gz`, `.tar` and `.zip` files.
 
 ```js
 var rdesc = require('rdesc-parser');
