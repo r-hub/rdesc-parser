@@ -39,7 +39,7 @@ function parse_desc_stream(descstream, callback) {
         // if an error happens
         descstream.removeListener("data", reader);
         descstream.removeListener("end", finisher);
-        return callback("Invalid record: " + rec.value);
+        return callback(new Error("Invalid record: " + rec.value));
       }
       if (deps.indexOf(rec.key) > -1) {
         rec.value = parse_dep_string(rec.value);
@@ -139,28 +139,49 @@ function parse_raw_tar_stream(input, callback) {
     }
   });
 
-  extract.on("finish", function () {
-    if (!done) {
-      callback("No DESCRIPTION file in tar archive");
-    }
+  input.on("error", function (err) {
+    callback(err);
   });
 
   extract.on("error", function (err) {
     callback(err);
   });
 
+  extract.on("finish", function () {
+    if (!done) {
+      callback(new Error("No DESCRIPTION file in tar archive"));
+    }
+  });
+
   input.pipe(extract);
 }
 
-function parse_zip_stream(descstream, callback) {
-  descstream.pipe(unzip.Parse()).on("entry", function (entry) {
+function parse_zip_stream(input, callback) {
+  var done = false;
+  var extract = input.pipe(unzip.Parse());
+  extract.on("entry", function (entry) {
     const fileName = entry.path;
     if (fileName.match(/^[^\/]+\/DESCRIPTION$/)) {
       parse_desc_stream(entry, function (err, cb) {
+        done = true;
         callback(err, cb);
       });
     } else {
       entry.autodrain();
+    }
+  });
+
+  input.on("error", function (err) {
+    callback(err);
+  });
+
+  extract.on("error", function (err) {
+    callback(err);
+  });
+
+  extract.on("finish", function () {
+    if (!done) {
+      callback(new Error("No DESCRIPTION file in zip file"));
     }
   });
 }
