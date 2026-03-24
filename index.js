@@ -123,58 +123,54 @@ function parse_stream(descstream, callback) {
         // The type of file
         var mime = x.fileType.mime;
 
-        // Zip has its own parser, return immediately
+        // .zip file
         if(mime === "application/zip"){
            return parse_zip_stream(x, callback);
         }
 
-        var stream_to_parse = x;
-        if (x.fileType !== undefined) {
-            var mime = x.fileType.mime;
+        // .tar.gz file
+        if (mime === "application/gzip") {
+            return parse_raw_tar_stream(x.pipe(zlib.createGunzip()), callback)
+        } 
 
-            // Zip has its own parser
-            if(mime === "application/zip"){
-               return parse_zip_stream(x, callback);
-            }
-
-            // Decompress if needed
-            if (mime === "application/gzip") {
-                stream_to_parse = x.pipe(zlib.createGunzip());
-            } else if (mime === "application/zstd") {
-                stream_to_parse = x.pipe(zlib.createZstdDecompress());
-            }
+        if (mime === "application/zstd") {
+            return parse_raw_tar_stream(x.pipe(zlib.createZstdDecompress()), callback);
         }
 
-        // Now extract the tar
-        var extract = tar.extract();
-        var done = false;
-
-        extract.on('entry', function(header, tarstream, tarcb) {
-            tarstream.on('end', tarcb);
-            tarstream.on('error', function(err){
-                done = true;
-                callback(err);
-            });
-            if (!done && header.name.match(/^[^\/]+\/DESCRIPTION$/)) {
-                done = true;
-                parse_desc_stream(tarstream, function(err, d) {
-                    callback(err, d);
-                });
-            } else {
-                tarstream.resume();
-            }
-        });
-
-        extract.on('finish', function() {
-            if (!done) { callback('No DESCRIPTION file in tar archive'); }
-        })
-
-        extract.on('error', function(err) {
-            callback(err);
-        })
-
-        stream_to_parse.pipe(extract);
+        // Default is assuming no compression
+        return parse_raw_tar_stream(x, callback);
     });
+}
+
+function parse_raw_tar_stream(input, callback) {
+    var extract = tar.extract();
+    var done = false;
+
+    extract.on('entry', function(header, tarstream, tarcb) {
+        tarstream.on('end', tarcb);
+        tarstream.on('error', function(err){
+            done = true;
+            callback(err);
+        });
+        if (!done && header.name.match(/^[^\/]+\/DESCRIPTION$/)) {
+            done = true;
+            parse_desc_stream(tarstream, function(err, d) {
+                callback(err, d);
+            });
+        } else {
+            tarstream.resume();
+        }
+    });
+
+    extract.on('finish', function() {
+        if (!done) { callback('No DESCRIPTION file in tar archive'); }
+    })
+
+    extract.on('error', function(err) {
+        callback(err);
+    })
+
+    input.pipe(extract);
 }
 
 function parse_zip_stream(descstream, callback) {
