@@ -66,7 +66,7 @@ function parse_desc_stream(descstream, callback) {
   descstream.on("end", finisher);
 }
 
-function parse_dep_string(str) {
+export function parse_dep_string(str) {
   return str
     .split(/,[\s]*/s)
     .filter(function (str) {
@@ -114,41 +114,9 @@ function split_record(str) {
   };
 }
 
-function parse_desc_file(path, callback) {
+export function parse_desc_file(path, callback) {
   var descstream = fs.createReadStream(path);
   parse_desc_stream(descstream, callback);
-}
-
-function parse_stream(descstream, callback) {
-  filetype.stream(descstream).then(function (x) {
-    // For no type it is assumed a plain text file
-    if (x.fileType === undefined) {
-      return parse_desc_stream(x, callback);
-    }
-
-    // The type of file
-    var mime = x.fileType.mime;
-
-    // .zip file
-    if (mime === "application/zip") {
-      return parse_zip_stream(x, callback);
-    }
-
-    // .tar.gz file
-    if (mime === "application/gzip") {
-      return parse_raw_tar_stream(x.pipe(zlib.createGunzip()), callback);
-    }
-
-    if (mime === "application/zstd") {
-      return parse_raw_tar_stream(
-        x.pipe(zlib.createZstdDecompress()),
-        callback,
-      );
-    }
-
-    // Default is assuming no compression
-    return parse_raw_tar_stream(x, callback);
-  });
 }
 
 function parse_raw_tar_stream(input, callback) {
@@ -197,20 +165,42 @@ function parse_zip_stream(descstream, callback) {
   });
 }
 
-function parse_file(path, callback) {
+export function parse_stream(descstream, callback) {
+  filetype.stream(descstream).then(function (x) {
+    // For no type it is assumed a plain text file
+    if (x.fileType === undefined) {
+      return parse_desc_stream(x, callback);
+    }
+
+    // The type of file
+    var mime = x.fileType.mime;
+
+    // .zip file
+    if (mime === "application/zip") {
+      return parse_zip_stream(x, callback);
+    }
+
+    // .tar.gz file
+    if (mime === "application/gzip") {
+      return parse_raw_tar_stream(x.pipe(zlib.createGunzip()), callback);
+    }
+
+    if (mime === "application/zstd") {
+      return parse_raw_tar_stream(
+        x.pipe(zlib.createZstdDecompress()),
+        callback,
+      );
+    }
+
+    // Default is assuming no compression
+    return parse_raw_tar_stream(x, callback);
+  });
+}
+
+export function parse_file(path, callback) {
   var descstream = fs.createReadStream(path);
   return parse_stream(descstream, callback);
 }
 
 export default parse_desc_stream;
-export {
-  parse_desc_file,
-  parse_file,
-  parse_stream,
-  parse_zip_stream,
-  parse_dep_string,
-  // Backward compatibility
-  parse_file as parse_zip_file,
-  parse_file as parse_tar_file,
-  parse_stream as parse_tar_stream,
-};
+

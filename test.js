@@ -4,7 +4,6 @@ import { promisify } from "node:util";
 import parseDescStream, {
   parse_desc_file,
   parse_stream,
-  parse_zip_file,
   parse_file,
   parse_dep_string,
 } from "./index.js";
@@ -12,7 +11,6 @@ import parseDescStream, {
 const desc = promisify(parseDescStream);
 desc.parse_desc_file = promisify(parse_desc_file);
 desc.parse_stream = promisify(parse_stream);
-desc.parse_zip_file = promisify(parse_zip_file);
 desc.parse_file = promisify(parse_file);
 desc.parse_dep_string = parse_dep_string;
 
@@ -84,12 +82,6 @@ test("parse_stream, zip", async function (t) {
   let d = await desc.parse_stream(
     fs.createReadStream("./test/foobar_1.0.0.zip"),
   );
-  t.is(d.Package, "foobar");
-  t.is(d.RoxygenNote, "6.0.1");
-});
-
-test("parse_zip_file", async function (t) {
-  let d = await desc.parse_zip_file("./test/foobar_1.0.0.zip");
   t.is(d.Package, "foobar");
   t.is(d.RoxygenNote, "6.0.1");
 });
