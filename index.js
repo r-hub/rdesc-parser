@@ -3,12 +3,67 @@ var byline = require('byline');
 var fs = require('fs');
 var filetype = require('file-type');
 var tar = require('tar-stream');
-var gunzip = require('gunzip-maybe');
+var zlib = require('zlib');
 var unzip = require('unzipper');
 var stream = require('stream');
 
 function normalize_ws(x){
     return x.trim().replace(/\s/g, ' ');
+}
+
+// Similar to gunzip-maybe: check for gzip magic bytes and decompress if needed
+function maybeGunzip() {
+    var isGzip = null;
+    var decompressor = null;
+    var passthrough = null;
+    var buffer = [];
+
+    var proxy = new stream.Transform({
+        transform: function(chunk, encoding, callback) {
+            if (isGzip === null) {
+                buffer.push(chunk);
+                // Check for gzip magic bytes (0x1f, 0x8b)
+                if (chunk.length >= 2 && chunk[0] === 0x1f && chunk[1] === 0x8b) {
+                    isGzip = true;
+                    decompressor = zlib.createGunzip();
+                    var self = this;
+                    decompressor.on('data', function(data) {
+                        self.push(data);
+                    });
+                    decompressor.on('error', function(err) {
+                        self.emit('error', err);
+                    });
+                    // Write buffered chunks
+                    buffer.forEach(function(buf) {
+                        decompressor.write(buf);
+                    });
+                    buffer = [];
+                } else if (chunk.length >= 2) {
+                    // Not gzip, pass through
+                    isGzip = false;
+                    buffer.forEach(function(buf) {
+                        this.push(buf);
+                    }.bind(this));
+                    buffer = [];
+                }
+                callback();
+            } else if (isGzip) {
+                decompressor.write(chunk, encoding, callback);
+            } else {
+                this.push(chunk);
+                callback();
+            }
+        },
+        flush: function(callback) {
+            if (isGzip && decompressor) {
+                decompressor.end(callback);
+            } else {
+                callback();
+            }
+        }
+    });
+
+    return proxy;
 }
 
 function parse_desc_stream(descstream, callback) {
@@ -141,7 +196,7 @@ function parse_tar_stream(descstream, callback) {
     })
 
     descstream
-        .pipe(gunzip())
+        .pipe(maybeGunzip())
         .pipe(extract);
 }
 
