@@ -11,76 +11,6 @@ function normalize_ws(x){
     return x.trim().replace(/\s/g, ' ');
 }
 
-// Similar to gunzip-maybe: check for gzip/zstd magic bytes and decompress if needed
-function maybeGunzip() {
-    var compressionType = null;
-    var decompressor = null;
-    var passthrough = null;
-    var buffer = [];
-
-    var proxy = new stream.Transform({
-        transform: function(chunk, encoding, callback) {
-            if (compressionType === null) {
-                buffer.push(chunk);
-                // Check for gzip magic bytes (0x1f, 0x8b)
-                if (chunk.length >= 2 && chunk[0] === 0x1f && chunk[1] === 0x8b) {
-                    compressionType = 'gzip';
-                    decompressor = zlib.createGunzip();
-                    var self = this;
-                    decompressor.on('data', function(data) {
-                        self.push(data);
-                    });
-                    decompressor.on('error', function(err) {
-                        self.emit('error', err);
-                    });
-                    // Write buffered chunks
-                    buffer.forEach(function(buf) {
-                        decompressor.write(buf);
-                    });
-                    buffer = [];
-                // Check for zstd magic bytes (0x28, 0xB5, 0x2F, 0xFD)
-                } else if (chunk.length >= 4 && chunk[0] === 0x28 && chunk[1] === 0xB5 && chunk[2] === 0x2F && chunk[3] === 0xFD) {
-                    compressionType = 'zstd';
-                    decompressor = zlib.createZstdDecompress();
-                    var self = this;
-                    decompressor.on('data', function(data) {
-                        self.push(data);
-                    });
-                    decompressor.on('error', function(err) {
-                        self.emit('error', err);
-                    });
-                    // Write buffered chunks
-                    buffer.forEach(function(buf) {
-                        decompressor.write(buf);
-                    });
-                    buffer = [];
-                } else if (chunk.length >= 4) {
-                    // Not gzip or zstd, pass through
-                    compressionType = 'none';
-                    buffer.forEach(function(buf) {
-                        this.push(buf);
-                    }.bind(this));
-                    buffer = [];
-                }
-                callback();
-            } else if (compressionType !== 'none') {
-                decompressor.write(chunk, encoding, callback);
-            } else {
-                this.push(chunk);
-                callback();
-            }
-        },
-        flush: function(callback) {
-            if (compressionType !== 'none' && decompressor) {
-                decompressor.end(callback);
-            } else {
-                callback();
-            }
-        }
-    });
-
-    return proxy;
-}
 
 function parse_desc_stream(descstream, callback) {
     var descstream = byline(descstream, { keepEmptyLines: true });
@@ -183,42 +113,68 @@ function parse_desc_file(path, callback) {
     parse_desc_stream(descstream, callback)
 }
 
-function parse_tar_stream(descstream, callback) {
-    var extract = tar.extract();
-    var done = false;
-
-    extract.on('entry', function(header, tarstream, tarcb) {
-        tarstream.on('end', tarcb);
-        tarstream.on('error', function(err){
-            done = true;
-            callback(err);
-        });
-        if (!done && header.name.match(/^[^\/]+\/DESCRIPTION$/)) {
-            done = true;
-            parse_desc_stream(tarstream, function(err, d) {
-                callback(err, d);
-            });
-        } else {
-            tarstream.resume();
+function parse_stream(descstream, callback) {
+    filetype.stream(descstream).then(function(x) {
+        // For no type it is assumed a plain text file
+        if(x.fileType === undefined) {
+            return parse_desc_stream(x, callback);
         }
+
+        // The type of file
+        var mime = x.fileType.mime;
+
+        // Zip has its own parser, return immediately
+        if(mime === "application/zip"){
+           return parse_zip_stream(x, callback);
+        }
+
+        var stream_to_parse = x;
+        if (x.fileType !== undefined) {
+            var mime = x.fileType.mime;
+
+            // Zip has its own parser
+            if(mime === "application/zip"){
+               return parse_zip_stream(x, callback);
+            }
+
+            // Decompress if needed
+            if (mime === "application/gzip") {
+                stream_to_parse = x.pipe(zlib.createGunzip());
+            } else if (mime === "application/zstd") {
+                stream_to_parse = x.pipe(zlib.createZstdDecompress());
+            }
+        }
+
+        // Now extract the tar
+        var extract = tar.extract();
+        var done = false;
+
+        extract.on('entry', function(header, tarstream, tarcb) {
+            tarstream.on('end', tarcb);
+            tarstream.on('error', function(err){
+                done = true;
+                callback(err);
+            });
+            if (!done && header.name.match(/^[^\/]+\/DESCRIPTION$/)) {
+                done = true;
+                parse_desc_stream(tarstream, function(err, d) {
+                    callback(err, d);
+                });
+            } else {
+                tarstream.resume();
+            }
+        });
+
+        extract.on('finish', function() {
+            if (!done) { callback('No DESCRIPTION file in tar archive'); }
+        })
+
+        extract.on('error', function(err) {
+            callback(err);
+        })
+
+        stream_to_parse.pipe(extract);
     });
-
-    extract.on('finish', function() {
-        if (!done) { callback('No DESCRIPTION file in tar archive'); }
-    })
-
-    extract.on('error', function(err) {
-        callback(err);
-    })
-
-    descstream
-        .pipe(maybeGunzip())
-        .pipe(extract);
-}
-
-function parse_tar_file(path, callback) {
-    var descstream = fs.createReadStream(path);
-    parse_tar_stream(descstream, callback)
 }
 
 function parse_zip_stream(descstream, callback) {
@@ -236,40 +192,20 @@ function parse_zip_stream(descstream, callback) {
         });
 }
 
-function parse_zip_file(path, callback) {
-    var descstream = fs.createReadStream(path);
-    parse_zip_stream(descstream, callback)
-}
-
-function parse_stream(descstream, callback) {
-    filetype.stream(descstream).then(function(x) {
-        if (x.fileType !== undefined) {
-            var mime = x.fileType.mime;
-            if (mime === "application/gzip" || mime === "application/x-tar" || mime === "application/zstd") {
-                parse_tar_stream(x, callback);
-            } else if (mime === "application/zip") {
-                parse_zip_stream(x, callback);
-            } else {
-                parse_desc_stream(x, callback);
-            }
-        } else {
-            parse_desc_stream(x, callback)
-        }
-    })
-}
-
 function parse_file(path, callback) {
     var descstream = fs.createReadStream(path);
-    parse_stream(descstream, callback);
+    return parse_stream(descstream, callback);
 }
 
 parse_desc_stream.parse_desc_file  = parse_desc_file;
 parse_desc_stream.parse_file       = parse_file;
 parse_desc_stream.parse_stream     = parse_stream;
-parse_desc_stream.parse_tar_file   = parse_tar_file;
-parse_desc_stream.parse_tar_stream = parse_tar_stream;
-parse_desc_stream.parse_zip_file   = parse_zip_file;
 parse_desc_stream.parse_zip_stream = parse_zip_stream;
 parse_desc_stream.parse_dep_string = parse_dep_string;
+
+/* Backward compatibility */
+parse_desc_stream.parse_zip_file   = parse_file;
+parse_desc_stream.parse_tar_file   = parse_file;
+parse_desc_stream.parse_tar_stream = parse_stream;
 
 module.exports = parse_desc_stream;
