@@ -1,11 +1,11 @@
 import rConstants from "r-constants";
 import byline from "byline";
-import fs from "fs";
+import fs from "node:fs";
 import filetype from "file-type";
 import tar from "tar-stream";
-import zlib from "zlib";
+import zlib from "node:zlib";
 import unzip from "unzipper";
-import stream from "stream";
+import stream from "node:stream";
 
 const deps = rConstants.dependency_types;
 

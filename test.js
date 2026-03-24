@@ -1,6 +1,6 @@
 import test from "ava";
-import fs from "fs";
-import { promisify } from "util";
+import fs from "node:fs";
+import { promisify } from "node:util";
 import parseDescStream, {
   parse_desc_file,
   parse_stream,
