@@ -1,11 +1,13 @@
-var deps = require("r-constants").dependency_types;
-var byline = require("byline");
-var fs = require("fs");
-var filetype = require("file-type");
-var tar = require("tar-stream");
-var zlib = require("zlib");
-var unzip = require("unzipper");
-var stream = require("stream");
+import rConstants from "r-constants";
+import byline from "byline";
+import fs from "fs";
+import filetype from "file-type";
+import tar from "tar-stream";
+import zlib from "zlib";
+import unzip from "unzipper";
+import stream from "stream";
+
+const deps = rConstants.dependency_types;
 
 function normalize_ws(x) {
   return x.trim().replace(/\s/g, " ");
@@ -200,15 +202,15 @@ function parse_file(path, callback) {
   return parse_stream(descstream, callback);
 }
 
-parse_desc_stream.parse_desc_file = parse_desc_file;
-parse_desc_stream.parse_file = parse_file;
-parse_desc_stream.parse_stream = parse_stream;
-parse_desc_stream.parse_zip_stream = parse_zip_stream;
-parse_desc_stream.parse_dep_string = parse_dep_string;
-
-/* Backward compatibility */
-parse_desc_stream.parse_zip_file = parse_file;
-parse_desc_stream.parse_tar_file = parse_file;
-parse_desc_stream.parse_tar_stream = parse_stream;
-
-module.exports = parse_desc_stream;
+export default parse_desc_stream;
+export {
+  parse_desc_file,
+  parse_file,
+  parse_stream,
+  parse_zip_stream,
+  parse_dep_string,
+  // Backward compatibility
+  parse_file as parse_zip_file,
+  parse_file as parse_tar_file,
+  parse_stream as parse_tar_stream,
+};

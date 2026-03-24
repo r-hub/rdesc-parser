@@ -1,6 +1,7 @@
 {
   "name": "rdesc-parser",
   "version": "4.0.0",
+  "type": "module",
   "engines": {
     "node": ">=23"
   },

@@ -1,12 +1,20 @@
-var test = require("ava");
+import test from "ava";
+import fs from "fs";
+import { promisify } from "util";
+import parseDescStream, {
+  parse_desc_file,
+  parse_stream,
+  parse_zip_file,
+  parse_file,
+  parse_dep_string,
+} from "./index.js";
 
-var fs = require("fs");
-var util = require("util");
-var desc = util.promisify(require("."));
-desc.parse_desc_file = util.promisify(desc.parse_desc_file);
-desc.parse_stream = util.promisify(desc.parse_stream);
-desc.parse_zip_file = util.promisify(desc.parse_zip_file);
-desc.parse_file = util.promisify(desc.parse_file);
+const desc = promisify(parseDescStream);
+desc.parse_desc_file = promisify(parse_desc_file);
+desc.parse_stream = promisify(parse_stream);
+desc.parse_zip_file = promisify(parse_zip_file);
+desc.parse_file = promisify(parse_file);
+desc.parse_dep_string = parse_dep_string;
 
 test("D1", async function (t) {
   let s = fs.createReadStream("./test/D1", { encoding: "utf8" });
