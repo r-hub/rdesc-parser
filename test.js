@@ -5,9 +5,7 @@ var fs = require('fs');
 var util = require('util');
 var desc = util.promisify(require('.'));
 desc.parse_desc_file = util.promisify(desc.parse_desc_file);
-desc.parse_tar_stream = util.promisify(desc.parse_tar_stream);
-desc.parse_tar_file = util.promisify(desc.parse_tar_file);
-desc.parse_zip_stream = util.promisify(desc.parse_zip_stream);
+desc.parse_stream = util.promisify(desc.parse_stream);
 desc.parse_zip_file = util.promisify(desc.parse_zip_file);
 desc.parse_file = util.promisify(desc.parse_file);
 
@@ -47,36 +45,36 @@ test('parse_desc_file', async function(t) {
     t.is(d.RoxygenNote, '5.0.1');
 });
 
-test('parse_tar_stream', async function(t) {
-    let d = await desc.parse_tar_stream(
+test('parse_stream, tarball', async function(t) {
+    let d = await desc.parse_stream(
         fs.createReadStream('./test/foobar_1.0.0.tar')
     );
     t.is(d.Package, 'foobar');
     t.is(d.RoxygenNote, '6.0.1');
 });
 
-test('parse_tar_stream, gzipped', async function(t) {
-    let d = await desc.parse_tar_stream(
+test('parse_stream, gzipped', async function(t) {
+    let d = await desc.parse_stream(
         fs.createReadStream('./test/foobar_1.0.0.tar.gz')
     );
     t.is(d.Package, 'foobar');
     t.is(d.RoxygenNote, '6.0.1');
 });
 
-test('parse_tar_file', async function(t) {
-    let d = await desc.parse_tar_file('./test/foobar_1.0.0.tar');
+test('parse_file, tarball', async function(t) {
+    let d = await desc.parse_file('./test/foobar_1.0.0.tar');
     t.is(d.Package, 'foobar');
     t.is(d.RoxygenNote, '6.0.1');
 });
 
-test('parse_tar_file, gzipped', async function(t) {
-    let d = await desc.parse_tar_file('./test/foobar_1.0.0.tar.gz');
+test('parse_file, gzipped', async function(t) {
+    let d = await desc.parse_file('./test/foobar_1.0.0.tar.gz');
     t.is(d.Package, 'foobar');
     t.is(d.RoxygenNote, '6.0.1');
 });
 
-test('parse_zip_stream', async function(t) {
-    let d = await desc.parse_zip_stream(
+test('parse_stream, zip', async function(t) {
+    let d = await desc.parse_stream(
         fs.createReadStream('./test/foobar_1.0.0.zip')
     );
     t.is(d.Package, 'foobar');
@@ -85,6 +83,12 @@ test('parse_zip_stream', async function(t) {
 
 test('parse_zip_file', async function(t) {
     let d = await desc.parse_zip_file('./test/foobar_1.0.0.zip');
+    t.is(d.Package, 'foobar');
+    t.is(d.RoxygenNote, '6.0.1');
+});
+
+test('parse_file, zipped', async function(t) {
+    let d = await desc.parse_file('./test/foobar_1.0.0.zip');
     t.is(d.Package, 'foobar');
     t.is(d.RoxygenNote, '6.0.1');
 });
