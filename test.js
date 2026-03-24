@@ -108,6 +108,12 @@ test('parse_file, tar.gz file', async function(t) {
     t.is(d.RoxygenNote, '6.0.1');
 });
 
+test('parse_file, tar.zstd file', async function(t) {
+    let d = await desc.parse_file('./test/foobar_1.0.0.tar.zstd');
+    t.is(d.Package, 'foobar');
+    t.is(d.RoxygenNote, '6.0.1');
+});
+
 test('parse_file, zip file', async function(t) {
     let d = await desc.parse_file('./test/foobar_1.0.0.zip');
      t.is(d.Package, 'foobar');

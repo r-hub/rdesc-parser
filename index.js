@@ -11,20 +11,20 @@ function normalize_ws(x){
     return x.trim().replace(/\s/g, ' ');
 }
 
-// Similar to gunzip-maybe: check for gzip magic bytes and decompress if needed
+// Similar to gunzip-maybe: check for gzip/zstd magic bytes and decompress if needed
 function maybeGunzip() {
-    var isGzip = null;
+    var compressionType = null;
     var decompressor = null;
     var passthrough = null;
     var buffer = [];
 
     var proxy = new stream.Transform({
         transform: function(chunk, encoding, callback) {
-            if (isGzip === null) {
+            if (compressionType === null) {
                 buffer.push(chunk);
                 // Check for gzip magic bytes (0x1f, 0x8b)
                 if (chunk.length >= 2 && chunk[0] === 0x1f && chunk[1] === 0x8b) {
-                    isGzip = true;
+                    compressionType = 'gzip';
                     decompressor = zlib.createGunzip();
                     var self = this;
                     decompressor.on('data', function(data) {
@@ -38,16 +38,32 @@ function maybeGunzip() {
                         decompressor.write(buf);
                     });
                     buffer = [];
-                } else if (chunk.length >= 2) {
-                    // Not gzip, pass through
-                    isGzip = false;
+                // Check for zstd magic bytes (0x28, 0xB5, 0x2F, 0xFD)
+                } else if (chunk.length >= 4 && chunk[0] === 0x28 && chunk[1] === 0xB5 && chunk[2] === 0x2F && chunk[3] === 0xFD) {
+                    compressionType = 'zstd';
+                    decompressor = zlib.createZstdDecompress();
+                    var self = this;
+                    decompressor.on('data', function(data) {
+                        self.push(data);
+                    });
+                    decompressor.on('error', function(err) {
+                        self.emit('error', err);
+                    });
+                    // Write buffered chunks
+                    buffer.forEach(function(buf) {
+                        decompressor.write(buf);
+                    });
+                    buffer = [];
+                } else if (chunk.length >= 4) {
+                    // Not gzip or zstd, pass through
+                    compressionType = 'none';
                     buffer.forEach(function(buf) {
                         this.push(buf);
                     }.bind(this));
                     buffer = [];
                 }
                 callback();
-            } else if (isGzip) {
+            } else if (compressionType !== 'none') {
                 decompressor.write(chunk, encoding, callback);
             } else {
                 this.push(chunk);
@@ -55,7 +71,7 @@ function maybeGunzip() {
             }
         },
         flush: function(callback) {
-            if (isGzip && decompressor) {
+            if (compressionType !== 'none' && decompressor) {
                 decompressor.end(callback);
             } else {
                 callback();
@@ -229,9 +245,9 @@ function parse_stream(descstream, callback) {
     filetype.stream(descstream).then(function(x) {
         if (x.fileType !== undefined) {
             var mime = x.fileType.mime;
-            if (mime === "application/gzip" || mime === "application/x-tar") {
+            if (mime === "application/gzip" || mime === "application/x-tar" || mime === "application/zstd") {
                 parse_tar_stream(x, callback);
-            } else if (mime = "application/zip") {
+            } else if (mime === "application/zip") {
                 parse_zip_stream(x, callback);
             } else {
                 parse_desc_stream(x, callback);
