@@ -215,6 +215,8 @@ export function parse_stream(descstream, callback) {
 
     // Default is assuming no compression
     return parse_raw_tar_stream(x, callback);
+  }).catch(function(err) {
+    callback(err);
   });
 }
 

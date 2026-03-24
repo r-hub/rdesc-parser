@@ -143,6 +143,14 @@ test("parse dependency string", function (t) {
 
 /* Test errors */
 
+test('parse_file, does not exist', async function (t) {
+  const error = await t.throwsAsync(() => {
+    return desc.parse_file("./test/doesnotexist");
+  });
+  t.regex(error.message, /no such file/);
+});
+
+
 test('parse_file, unsupported format', async function (t) {
   const error = await t.throwsAsync(() => {
     return desc.parse_file("./test/foobar_1.0.0.tar.xz");
