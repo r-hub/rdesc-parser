@@ -127,8 +127,67 @@ test("parse_file, zip file", async function (t) {
   t.is(d.Built.OStype, "unix");
 });
 
+//webr packages have modified tarball trailing data
+test("parse_file, webr tgz", async function (t) {
+  let d = await desc.parse_file("./test/webr-package.tgz");
+  t.is(d.Package, "sys");
+  t.is(d.Built.R, "4.5.1");
+  t.is(d.Built.Platform, "wasm32-unknown-emscripten");
+});
+
 test("parse dependency string", function (t) {
   var deps = desc.parse_dep_string("foo (>= 1.2.3), bar");
   t.deepEqual(deps[0], { package: "foo", version: ">= 1.2.3" });
   t.deepEqual(deps[1], { package: "bar" });
+});
+
+/* Test errors */
+
+test('parse_file, unsupported format', async function (t) {
+  const error = await t.throwsAsync(() => {
+    return desc.parse_file("./test/foobar_1.0.0.tar.xz");
+  });
+  t.is(error.message, 'Invalid tar header. Maybe the tar is corrupted or it needs to be gunzipped?');
+});
+
+test('parse_file, no DESCRIPTION', async function (t) {
+  const error = await t.throwsAsync(() => {
+    return desc.parse_file("./test/empty.tar.gz");
+  });
+  t.is(error.message, 'No DESCRIPTION file in tar archive');
+});
+
+test('parse_file, wrong content', async function (t) {
+  const error = await t.throwsAsync(() => {
+    return desc.parse_file("./test/yolo.txt");
+  });
+  t.is(error.message, 'Invalid record: This is nothing');
+});
+
+test('parse_stream, truncated tar.gz', async function (t) {
+  const error = await t.throwsAsync(() => {
+    return desc.parse_stream(
+      fs.createReadStream("./test/foobar_1.0.0.tar.gz", {start: 0, end: 200})
+    );
+  });
+  t.is(error.message, 'unexpected end of file');
+});
+
+test('parse_stream, truncated tar.zstd', async function (t) {
+  const error = await t.throwsAsync(() => {
+    return desc.parse_stream(
+      fs.createReadStream("./test/foobar_1.0.0.tar.zstd", {start: 0, end: 200})
+    );
+  });
+  // createZstdDecompress does not seem to error about truncation?
+  t.is(error.message, 'No DESCRIPTION file in tar archive');
+});
+
+test('parse_stream, truncated zip', async function (t) {
+  const error = await t.throwsAsync(() => {
+    return desc.parse_stream(
+      fs.createReadStream("./test/foobar_1.0.0.zip", {start: 0, end: 200})
+    );
+  });
+  t.is(error.message, 'FILE_ENDED');
 });
