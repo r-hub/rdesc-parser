@@ -1,7 +1,7 @@
 import rConstants from "r-constants";
 import byline from "byline";
 import fs from "node:fs";
-import filetype from "file-type";
+import {fileTypeStream} from 'file-type';
 import tar from "tar-stream";
 import zlib from "node:zlib";
 import unzip from "unzipper";
@@ -187,7 +187,7 @@ function parse_zip_stream(input, callback) {
 }
 
 export function parse_stream(descstream, callback) {
-  filetype.stream(descstream).then(function (x) {
+  fileTypeStream(descstream).then(function (x) {
     // For no type it is assumed a plain text file
     if (x.fileType === undefined) {
       return parse_desc_stream(x, callback);

@@ -3,7 +3,7 @@
   "version": "4.0.0",
   "type": "module",
   "engines": {
-    "node": ">=23"
+    "node": ">=22"
   },
   "description": "Parser for R package DESCRIPTION files.",
   "main": "index.js",
@@ -29,14 +29,14 @@
   },
   "homepage": "https://github.com/r-hub/rdesc-parser#readme",
   "dependencies": {
-    "byline": "^4.2.1",
-    "file-type": "^16.5.4",
+    "byline": "^4.2.2",
+    "file-type": "^21.3.4",
     "r-constants": "^1.0.0",
-    "tar-stream": "^3.1.7",
+    "tar-stream": "^3.1.8",
     "unzipper": "^0.12.3"
   },
   "devDependencies": {
-    "ava": "^6.2.0",
+    "ava": "^6.4.1",
     "prettier": "^3.8.1"
   }
 }
