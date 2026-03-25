@@ -13,59 +13,61 @@ function normalize_ws(x) {
   return x.trim().replace(/\s/g, " ");
 }
 
-function parse_desc_stream(descstream, callback) {
-  var descstream = byline(descstream, { keepEmptyLines: true });
-  var desc = {};
-  var current = "";
-  var first = true;
+function parse_desc_stream(descstream) {
+  return new Promise((resolve, reject) => {
+    var lines = byline(descstream, { keepEmptyLines: true });
+    var desc = {};
+    var current = "";
+    var first = true;
 
-  descstream.setEncoding("utf8");
+    lines.setEncoding("utf8");
 
-  function reader(line) {
-    // First line is special
-    if (first) {
-      current = line;
-      first = false;
+    function reader(line) {
+      // First line is special
+      if (first) {
+        current = line;
+        first = false;
 
-      // Starts with space, same record, append
-    } else if(line.startsWith("#")){
-      // comment
-    } else if (line.match(/^\s/)) {
-      current = current + "\n" + line.trim();
+        // Starts with space, same record, append
+      } else if(line.startsWith("#")){
+        // comment
+      } else if (line.match(/^\s/)) {
+        current = current + "\n" + line.trim();
 
-      // New record, need to emit the previous one
-    } else {
-      var rec = split_record(current);
-      if (rec.key === "") {
-        // No way to close a stream, we just remove the listeners
-        // if an error happens
-        descstream.removeListener("data", reader);
-        descstream.removeListener("end", finisher);
-        return callback(new Error("Invalid record: " + rec.value));
+        // New record, need to emit the previous one
+      } else {
+        var rec = split_record(current);
+        if (rec.key === "") {
+          // No way to close a stream, we just remove the listeners
+          // if an error happens
+          lines.removeListener("data", reader);
+          lines.removeListener("end", finisher);
+          return reject(new Error("Invalid record: " + rec.value));
+        }
+        if (deps.indexOf(rec.key) > -1) {
+          rec.value = parse_dep_string(rec.value);
+        }
+        if (rec.key == "Remotes") {
+          rec.value = parse_remotes(rec.value);
+        }
+        if (rec.key == "Built") {
+          rec.value = parse_built(rec.value);
+        }
+        if (rec.key == "Packaged") {
+          rec.value = parse_packaged(rec.value);
+        }
+        desc[rec.key] = rec.value;
+        current = line;
       }
-      if (deps.indexOf(rec.key) > -1) {
-        rec.value = parse_dep_string(rec.value);
-      }
-      if (rec.key == "Remotes") {
-        rec.value = parse_remotes(rec.value);
-      }
-      if (rec.key == "Built") {
-        rec.value = parse_built(rec.value);
-      }
-      if (rec.key == "Packaged") {
-        rec.value = parse_packaged(rec.value);
-      }
-      desc[rec.key] = rec.value;
-      current = line;
     }
-  }
 
-  function finisher() {
-    callback(null, desc);
-  }
+    function finisher() {
+      resolve(desc);
+    }
 
-  descstream.on("data", reader);
-  descstream.on("end", finisher);
+    lines.on("data", reader);
+    lines.on("end", finisher);
+  });
 }
 
 export function parse_dep_string(str) {
@@ -116,83 +118,73 @@ function split_record(str) {
   };
 }
 
-export function parse_desc_file(path, callback) {
+export function parse_desc_file(path) {
   var descstream = fs.createReadStream(path);
-  parse_desc_stream(descstream, callback);
+  return parse_desc_stream(descstream);
 }
 
-function parse_raw_tar_stream(input, callback) {
-  var extract = tar.extract();
-  var done = false;
+function parse_raw_tar_stream(input) {
+  return new Promise((resolve, reject) => {
+    var extract = tar.extract();
+    var done = false;
 
-  extract.on("entry", function (header, tarstream, tarcb) {
-    tarstream.on("end", tarcb);
-    tarstream.on("error", function (err) {
-      done = true;
-      callback(err);
-    });
-    if (!done && header.name.match(/^[^\/]+\/DESCRIPTION$/)) {
-      done = true;
-      parse_desc_stream(tarstream, function (err, d) {
-        callback(err, d);
-      });
-    } else {
-      tarstream.resume();
-    }
-  });
-
-  input.on("error", function (err) {
-    callback(err);
-  });
-
-  extract.on("error", function (err) {
-    callback(err);
-  });
-
-  extract.on("finish", function () {
-    if (!done) {
-      callback(new Error("No DESCRIPTION file in tar archive"));
-    }
-  });
-
-  input.pipe(extract);
-}
-
-function parse_zip_stream(input, callback) {
-  var done = false;
-  var extract = input.pipe(unzip.Parse());
-  extract.on("entry", function (entry) {
-    const fileName = entry.path;
-    if (fileName.match(/^[^\/]+\/DESCRIPTION$/)) {
-      parse_desc_stream(entry, function (err, cb) {
+    extract.on("entry", function (header, tarstream, tarcb) {
+      tarstream.on("end", tarcb);
+      tarstream.on("error", function (err) {
         done = true;
-        callback(err, cb);
+        reject(err);
       });
-    } else {
-      entry.autodrain();
-    }
-  });
+      if (!done && header.name.match(/^[^\/]+\/DESCRIPTION$/)) {
+        done = true;
+        parse_desc_stream(tarstream).then(resolve).catch(reject);
+      } else {
+        tarstream.resume();
+      }
+    });
 
-  input.on("error", function (err) {
-    callback(err);
-  });
+    input.on("error", reject);
+    extract.on("error", reject);
 
-  extract.on("error", function (err) {
-    callback(err);
-  });
+    extract.on("finish", function () {
+      if (!done) {
+        reject(new Error("No DESCRIPTION file in tar archive"));
+      }
+    });
 
-  extract.on("finish", function () {
-    if (!done) {
-      callback(new Error("No DESCRIPTION file in zip file"));
-    }
+    input.pipe(extract);
   });
 }
 
-export function parse_stream(descstream, callback) {
-  fileTypeStream(descstream).then(function (x) {
+function parse_zip_stream(input) {
+  return new Promise((resolve, reject) => {
+    var done = false;
+    var extract = input.pipe(unzip.Parse());
+    extract.on("entry", function (entry) {
+      const fileName = entry.path;
+      if (fileName.match(/^[^\/]+\/DESCRIPTION$/)) {
+        done = true;
+        parse_desc_stream(entry).then(resolve).catch(reject);
+      } else {
+        entry.autodrain();
+      }
+    });
+
+    input.on("error", reject);
+    extract.on("error", reject);
+
+    extract.on("finish", function () {
+      if (!done) {
+        reject(new Error("No DESCRIPTION file in zip file"));
+      }
+    });
+  });
+}
+
+export function parse_stream(descstream) {
+  return fileTypeStream(descstream).then(function (x) {
     // For no type it is assumed a plain text file
     if (x.fileType === undefined) {
-      return parse_desc_stream(x, callback);
+      return parse_desc_stream(x);
     }
 
     // The type of file
@@ -200,31 +192,26 @@ export function parse_stream(descstream, callback) {
 
     // .zip file
     if (mime === "application/zip") {
-      return parse_zip_stream(x, callback);
+      return parse_zip_stream(x);
     }
 
     // .tar.gz file
     if (mime === "application/gzip") {
-      return parse_raw_tar_stream(x.pipe(zlib.createGunzip()), callback);
+      return parse_raw_tar_stream(x.pipe(zlib.createGunzip()));
     }
 
     if (mime === "application/zstd") {
-      return parse_raw_tar_stream(
-        x.pipe(zlib.createZstdDecompress()),
-        callback,
-      );
+      return parse_raw_tar_stream(x.pipe(zlib.createZstdDecompress()));
     }
 
     // Default is assuming no compression
-    return parse_raw_tar_stream(x, callback);
-  }).catch(function(err) {
-    callback(err);
+    return parse_raw_tar_stream(x);
   });
 }
 
-export function parse_file(path, callback) {
+export function parse_file(path) {
   var descstream = fs.createReadStream(path);
-  return parse_stream(descstream, callback);
+  return parse_stream(descstream);
 }
 
 export default parse_desc_stream;
