@@ -1,7 +1,8 @@
 import test from "ava";
 import fs from "node:fs";
-import parseDescStream, {
+import  {
   parse_desc_file,
+  parse_desc_stream,
   parse_stream,
   parse_file,
   parse_dep_string,
@@ -9,7 +10,7 @@ import parseDescStream, {
 
 test("D1", async function (t) {
   let s = fs.createReadStream("./test/D1", { encoding: "utf8" });
-  let d = await parseDescStream(s);
+  let d = await parse_desc_stream(s);
   t.is(d.Package, "parr");
   t.is(d.Maintainer, "Gabor Csardi <csardi.gabor@gmail.com>");
   t.is(d.RoxygenNote, "5.0.1");
@@ -17,7 +18,7 @@ test("D1", async function (t) {
 
 test("D2", async function (t) {
   let s = fs.createReadStream("./test/D2", { encoding: "utf8" });
-  let d = await parseDescStream(s);
+  let d = await parse_desc_stream(s);
   t.is(d.Package, "roxygen2");
   t.is(d.Depends.length, 1);
   t.is(d.Imports.length, 8);
@@ -30,7 +31,7 @@ test("D2", async function (t) {
 
 test("D3", async function (t) {
   await t.throwsAsync(
-    parseDescStream(fs.createReadStream("./test/D3", { encoding: "utf8" })),
+    parse_desc_stream(fs.createReadStream("./test/D3", { encoding: "utf8" })),
     { any: true },
     "Invalid record: ",
   );

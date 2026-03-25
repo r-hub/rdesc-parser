@@ -13,7 +13,7 @@ function normalize_ws(x) {
   return x.trim().replace(/\s/g, " ");
 }
 
-function parse_desc_stream(descstream) {
+export function parse_desc_stream(descstream) {
   return new Promise((resolve, reject) => {
     var lines = byline(descstream, { keepEmptyLines: true });
     var desc = {};
@@ -213,6 +213,3 @@ export function parse_file(path) {
   var descstream = fs.createReadStream(path);
   return parse_stream(descstream);
 }
-
-export default parse_desc_stream;
-

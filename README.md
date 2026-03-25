@@ -5,16 +5,37 @@
 
 ## Examples
 
-### Parse `DESCRIPTION` stream
+### Parsing files and streams
+
+This package can parse DESCRIPTION from a file or a stream:
+
+ - `parse_stream(stream)`
+ - `parse_file(path)`
+
+Both functions return a promise and auto-detect the input format using the magic byte. We support 5 types:
+
+ - `text/plain`: plain-text file in dcf format (i.e. raw DESCRIPTION file)
+ - `application/zip`: zip archive containing one file named `DESCRIPTION`
+ - `application/gzip`: tar.gz archive containing one file named `DESCRIPTION`
+ - `application/zstd`: tar.zstd archive containing one file named `DESCRIPTION`
+ - `other`: uncomprssed tarball archive containing one file named `DESCRIPTION`
+
 
 ```js
-var rdesc = require('rdesc-parser');
-stream = fs.createReadStream('DESCRIPTION');
-rdesc(stream, function(err, d) {
-  if (err) throw(err);
-  console.log(d);
-})
+// npm install rdesc-parser
+let { parse_stream } = await import("rdesc-parser");
+let stream = fs.createReadStream('DESCRIPTION');
+var desc = await parse_stream(stream);
+desc
 ```
+
+We get same result by reading the file directly:
+
+```js
+let { parse_file } = await import("rdesc-parser");
+var desc = await parse_file('DESCRIPTION');
+desc
+````
 
 ```js
 {
@@ -34,39 +55,24 @@ rdesc(stream, function(err, d) {
 }
 ```
 
-### Parse `DESCRIPTION` file
+### Parsing from package files
+
+The same interface is used for `tar.zstd`, `.tar.gz`, `.tar` and `.zip` package files.
 
 ```js
-var rdesc = require('rdesc-parser');
-rdesc.parse_desc_file('./DESCRIPTION', function(err, d) {
-  if (err) throw(err);
-  console.log(d);
-})
-```
+let { parse_file } = await import("rdesc-parser");
+var desc = await parse_file('curl_7.0.0.tar.gz');
+desc
+````
 
-### Parse `DESCRIPTION` from a package stream
-
-It supports `tar.zstd`, `.tar.gz`, `.tar` and `.zip` files.
+We can use `parse_stream` to read a DESCRIPTION directly from an internet stream:
 
 ```js
-var rdesc = require('rdesc-parser');
-stream = fs.createReadStream('./test/foobar_1.0.0.tar.gz');
-rdesc.parse_stream(stream, function(err, d) {
-  if (err) throw(err);
-  console.log(d);
-})
-```
-
-### Parse `DESCRIPTION` from a package file
-
-It supports `tar.zstd`, `.tar.gz`, `.tar` and `.zip` files.
-
-```js
-var rdesc = require('rdesc-parser');
-rdesc.parse_file('./test/foobar_1.0.0.zip', function(err, d) {
-  if (err) throw(err);
-  console.log(d);
-})
+let { Readable } = await import( "stream");
+let { parse_stream } = await import("rdesc-parser");
+let response = await fetch('https://cran.r-project.org/src/contrib/Archive/curl/curl_6.0.0.tar.gz');
+var desc = parse_stream(Readable.fromWeb(response.body));
+desc
 ```
 
 ## License
