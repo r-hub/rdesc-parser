@@ -28,6 +28,8 @@ function parse_desc_stream(descstream, callback) {
       first = false;
 
       // Starts with space, same record, append
+    } else if(line.startsWith("#")){
+      // comment
     } else if (line.match(/^\s/)) {
       current = current + "\n" + line.trim();
 

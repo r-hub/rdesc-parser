@@ -1,5 +1,6 @@
 Package: parr
 Version: 3.3.0
+# Comment
 Title: Easy Parallel Computation
 Author: Gabor Csardi, R Core Team
 Maintainer: Gabor Csardi <csardi.gabor@gmail.com>
