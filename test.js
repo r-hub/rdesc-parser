@@ -182,6 +182,13 @@ test('parse_stream, truncated tar.gz', async function (t) {
   t.is(error.message, 'unexpected end of file');
 });
 
+test('parse_stream, gz without tarball', async function (t) {
+  const error = await t.throwsAsync(() => {
+    return parse_file("./test/D2.gz");
+  });
+  t.regex(error.message, /Invalid tar/);
+});
+
 test('parse_stream, truncated tar.zstd', async function (t) {
   const error = await t.throwsAsync(() => {
     return parse_stream(
